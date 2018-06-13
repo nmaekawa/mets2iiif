@@ -1,0 +1,7 @@
+-r base.txt
+
+pip==8.1.2
+flake8==2.6.0
+tox==2.3.1
+
+pytest==2.9.2
