@@ -300,6 +300,10 @@ def create_range_json(ranges, manifest_uri, range_id, within, label):
         rangesJsonList.append(rangejson)
 
 def create_ranges(ranges, previous_id, manifest_uri):
+        #x = json.dumps({'result': ranges})
+        #print(x)
+        #exit()
+
         if not any(isinstance(x, dict) for x in ranges):
                 return
 
@@ -424,8 +428,10 @@ def main(data, document_id, source, host, cookie=None):
         logo = settings.IIIF['logo']
 
         drs2json = None
+        # 14jun18 naomi: is this running in prod?
+        # assuming that 'data' is already a json!
+        # if there's the string 'response' in the xml, it will fail...
         if 'response' in data:
-        #if 'object_structmap_raw' in data:
                 drs2json = data['response']['docs'][0]
                 data = settings.METS_HEADER + drs2json['object_file_sec_raw'] + \
                    drs2json['object_structmap_raw'] + settings.METS_FOOTER
