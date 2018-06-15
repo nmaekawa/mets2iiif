@@ -328,7 +328,6 @@ def create_ranges(ranges, previous_id, manifest_uri):
 
 def try10(range_dict, counter, manifest_uri):
 
-    range_list = []
     c = counter
     # assume it's a dict, and it has only one item
     k = list(range_dict.keys())[0]
@@ -340,6 +339,8 @@ def try10(range_dict, counter, manifest_uri):
         'canvases': [],
         'ranges': [],
     }
+    range_list = [parent_range]
+
     if isinstance(v, str):  # one canvas
         parent_range['canvases'].append('{0}/canvas/canvas-{1}.json'.format(
             manifest_uri, v))
@@ -348,9 +349,9 @@ def try10(range_dict, counter, manifest_uri):
         for item in v:  # assume v it's a list of str or dicts
             c += 1
             child_range, r_list = try10(item, c, manifest_uri)
-            parent_range['ranges'].append(child_range)
-            #parent_range['ranges'].append(child_range['@id'])
-            #range_list.append(r_list)
+            #parent_range['ranges'].append(child_range)
+            parent_range['ranges'].append(child_range['@id'])
+            range_list += r_list
 
     # remove empty lists
     if not parent_range['canvases']:
