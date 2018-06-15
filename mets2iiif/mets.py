@@ -266,11 +266,12 @@ def get_leaf_canvases(ranges, leaf_canvases):
                         value = range.get(list(range.keys())[0])
                 else:
                         value = range
-                #if type(value) is list:
+
                 if any(isinstance(x, dict) for x in value):
                         get_leaf_canvases(value, leaf_canvases)
                 else:
                         leaf_canvases.append(value)
+
 
 def create_range_json(ranges, manifest_uri, range_id, within, label):
         # this is either a nested list of dicts or one or more image ids in the METS
@@ -309,17 +310,57 @@ def create_ranges(ranges, previous_id, manifest_uri):
 
         counter = 0
         for ri in ranges:
-                counter = counter + 1
-                label = list(ri.keys())[0]
-                if previous_id == manifest_uri:
-                        # these are for the top level divs
-                        range_id = manifest_uri + "/range/range-%s.json" % counter
-                else:
-                        # otherwise, append the counter to the parent's id
-                        range_id = previous_id[0:previous_id.rfind('.json')] + "-%s.json" % counter
-                new_ranges = ri.get(label)
-                create_range_json(new_ranges, manifest_uri, range_id, previous_id, label)
-                create_ranges(new_ranges, range_id, manifest_uri)
+            counter = counter + 1
+            label = list(ri.keys())[0]
+            if previous_id == manifest_uri:
+                # these are for the top level divs
+                range_id = '{0}/range/range-{1}.json'.format(
+                    manifest_uri, counter)
+            else:
+                # otherwise, append the counter to the parent's id
+                range_id = '{0}-{1}.json'.format(
+                    previous_id[0:previous_id.rfind('.json')], counter)
+
+            new_ranges = ri.get(label)
+            create_range_json(new_ranges, manifest_uri, range_id, previous_id, label)
+            create_ranges(new_ranges, range_id, manifest_uri)
+
+
+def try10(range_dict, counter, manifest_uri):
+
+    range_list = []
+    c = counter
+    # assume it's a dict, and it has only one item
+    k = list(range_dict.keys())[0]
+    v = range_dict[k]
+    parent_range = {
+        '@id': '{0}/range/range-{1}.json'.format(manifest_uri, c),
+        '@type': 'sc:Range',
+        'label': k,
+        'canvases': [],
+        'ranges': [],
+    }
+    if isinstance(v, str):  # one canvas
+        parent_range['canvases'].append('{0}/canvas/canvas-{1}.json'.format(
+            manifest_uri, v))
+
+    if isinstance(v, list): # v might be list of canvases or nested ranges
+        for item in v:  # assume v it's a list of str or dicts
+            c += 1
+            child_range, r_list = try10(item, c, manifest_uri)
+            parent_range['ranges'].append(child_range)
+            #parent_range['ranges'].append(child_range['@id'])
+            #range_list.append(r_list)
+
+    # remove empty lists
+    if not parent_range['canvases']:
+        del parent_range['canvases']
+    if not parent_range['ranges']:
+        del parent_range['ranges']
+    return parent_range, range_list
+
+
+
 
 
 
