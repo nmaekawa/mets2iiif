@@ -326,14 +326,13 @@ def create_ranges(ranges, previous_id, manifest_uri):
             create_ranges(new_ranges, range_id, manifest_uri)
 
 
-def try10(range_dict, counter, manifest_uri):
+def translate_range(range_dict, prefix, manifest_uri):
 
-    c = counter
     # assume it's a dict, and it has only one item
     k = list(range_dict.keys())[0]
     v = range_dict[k]
     parent_range = {
-        '@id': '{0}/range/range-{1}.json'.format(manifest_uri, c),
+        '@id': '{0}/range/range-{1}.json'.format(manifest_uri, prefix),
         '@type': 'sc:Range',
         'label': k,
         'canvases': [],
@@ -346,10 +345,9 @@ def try10(range_dict, counter, manifest_uri):
             manifest_uri, v))
 
     if isinstance(v, list): # v might be list of canvases or nested ranges
-        for item in v:  # assume v it's a list of str or dicts
-            c += 1
-            child_range, r_list = try10(item, c, manifest_uri)
-            #parent_range['ranges'].append(child_range)
+        for i, item in enumerate(v):  # assume v it's a list of str or dicts
+            new_prefix = '{}-{}'.format(prefix, i)
+            child_range, r_list = translate_range(item, new_prefix, manifest_uri)
             parent_range['ranges'].append(child_range['@id'])
             range_list += r_list
 
@@ -361,7 +359,18 @@ def try10(range_dict, counter, manifest_uri):
     return parent_range, range_list
 
 
+def translate_ranges(mets_ranges, manifest_uri):
+    """
+    returns list of iiif ranges
 
+    mets_ranges: list of one dict
+    manifest_uri: includes protocol://hostname:port/path_prefix
+    """
+    parent_range, child_range = translate_range(mets_ranges[0], '0', manifest_uri)
+    toc = child_range[0]
+    # per iiif prezi 2.0, table of contents should have viewingHint
+    toc['viewingHint'] = 'top'
+    return child_range
 
 
 
@@ -529,7 +538,7 @@ def main(data, document_id, source, host, cookie=None):
                 modsTitle = None
                 if ('object_mods_title_text' in drs2json and len(drs2json['object_mods_title_text']) > 0):
                         modsTitle = drs2json['object_mods_title_text'][0]
-                
+
                 if modsDateIssued != None:
                         modsDate = modsDateIssued
                 if modsDateCreated != None:
@@ -616,6 +625,7 @@ def main(data, document_id, source, host, cookie=None):
                 if ranges: #dedup thumbnail bar
                         rangeList.extend(ranges)
 
+        # 18jun18 naomi: rangeInfo always a list of one dict
         rangeInfo = [{"Table of Contents" : rangeList}]
 
         mfjson = {
@@ -726,10 +736,12 @@ def main(data, document_id, source, host, cookie=None):
                         uniqCanvases[cvs['image']] = True 
 
         # build table of contents using Range and Structures
-        create_ranges(rangeInfo, manifest_uri, manifest_uri)
+        # create_ranges(rangeInfo, manifest_uri, manifest_uri)
+        iiif2_toc = translate_ranges(rangeInfo, manifest_uri)
 
         mfjson['sequences'][0]['canvases'] = canvases
-        mfjson['structures'] = rangesJsonList
+        #mfjson['structures'] = rangesJsonList
+        mfjson['structures'] = iiif2_toc
 
         #logger.debug("Dumping json for DRS2 object " + str(document_id) )
         output = json.dumps(mfjson, indent=4, sort_keys=True)
