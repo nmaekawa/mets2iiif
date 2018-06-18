@@ -27,7 +27,8 @@ with open('README.md') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'Click>=6.0',
+    'lxml',
+    'requests',
 ]
 
 test_requirements = [
@@ -47,11 +48,6 @@ setup(
     ],
     package_dir={'mets2iiif':
                  'mets2iiif'},
-    entry_points={
-        'console_scripts': [
-            'mets2iiif=mets2iiif.cli:main'
-        ]
-    },
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",
@@ -69,5 +65,5 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=test_requirements,
 )

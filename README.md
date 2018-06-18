@@ -3,20 +3,21 @@ mets2iiif
 
 translate a mets structural map into a iiif manifest
 
+based on
+https://github.com/harvard-library/metadata_server/blob/master/manifests/mets.py
 
-* Free software: MIT license
 
-
-Features
+to test
 --------
 
-* TODO
+    # create virtualenv and install requirements
+    (venv) $> pip install -r requirements/dev.txt
+    
+    # run tox for 2.7 and 3.6
+    (venv) $> tox
+    
+    # or run with pytest
+    (venv) $> py.test tests
 
-Credits
----------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
+---eop
